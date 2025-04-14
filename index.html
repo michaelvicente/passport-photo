@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Passport Photo Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .guidelines {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .guidelines h3 {
+            margin-top: 0;
+        }
+        
+        .upload-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        #uploadBtn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        #uploadBtn:hover {
+            background-color: #2980b9;
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        #photoCanvas {
+            border: 1px solid #ccc;
+            cursor: move;
+        }
+        
+        #guidelineOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .button-group {
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #downloadBtn {
+            background-color: #27ae60;
+        }
+        
+        #downloadBtn:hover {
+            background-color: #219653;
+        }
+        
+        #removeBackgroundBtn {
+            background-color: #9b59b6;
+        }
+        
+        #removeBackgroundBtn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .bg-controls {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .bg-color-picker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .bg-color-picker span {
+            margin-right: 10px;
+        }
+        
+        #bgColorPicker {
+            width: 40px;
+            height: 25px;
+            padding: 0;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .spinner {
+            display: none;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>US Passport Photo Tool</h1>
+    
+    <div class="guidelines">
+        <h3>US Passport Photo Guidelines</h3>
+        <ul>
+            <li>2 x 2 inches (51 x 51 mm) in size</li>
+            <li>Head must be between 1 inch and 1 3/8 inches (25-35 mm) from the bottom of the chin to the top of the head</li>
+            <li>Taken within the last 6 months</li>
+            <li>Plain white or off-white background</li>
+            <li>Neutral facial expression or natural smile</li>
+            <li>Both eyes open and clearly visible</li>
+            <li>No glasses</li>
+            <li>No head coverings (except for religious purposes)</li>
+        </ul>
+    </div>
+    
+    <div class="upload-container">
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <button id="uploadBtn">Upload Photo</button>
+    </div>
+    
+    <div class="editor-container" id="editorContainer">
+        <div class="canvas-container">
+            <canvas id="photoCanvas" width="400" height="400"></canvas>
+            <canvas id="guidelineOverlay" width="400" height="400"></canvas>
+        </div>
+        
+        <div class="button-group">
+            <button id="zoomInBtn">Zoom In</button>
+            <button id="zoomOutBtn">Zoom Out</button>
+            <button id="resetBtn">Reset</button>
+            <button id="removeBackgroundBtn">Remove Background</button>
+            <div class="spinner" id="loadingSpinner"></div>
+            <button id="downloadBtn">Download 4x6 Print</button>
+        </div>
+        
+        <div class="bg-controls" id="bgControls">
+            <div class="bg-color-picker">
+                <span>Background Color:</span>
+                <input type="color" id="bgColorPicker" value="#ffffff">
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <p>Drag the photo to center the face within the guidelines.<br>Use the zoom buttons to adjust size.</p>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const editorContainer = document.getElementById('editorContainer');
+        const photoCanvas = document.getElementById('photoCanvas');
+        const guidelineOverlay = document.getElementById('guidelineOverlay');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const removeBackgroundBtn = document.getElementById('removeBackgroundBtn');
+        const bgControls = document.getElementById('bgControls');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Canvas contexts
+        const photoCtx = photoCanvas.getContext('2d');
+        const guideCtx = guidelineOverlay.getContext('2d');
+        
+        // Variables for photo manipulation
+        let originalImage = null;
+        let processedImage = null;
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let startX, startY;
+        let photoWidth, photoHeight;
+        let hasTransparentBg = false;
+        let bgColor = "#ffffff";
+        
+        // Constants for US passport photo
+        const PASSPORT_WIDTH_INCHES = 2;
+        const PASSPORT_HEIGHT_INCHES = 2;
+        const HEAD_HEIGHT_MIN_MM = 25;
+        const HEAD_HEIGHT_MAX_MM = 35;
+        const MM_TO_INCHES = 0.0393701;
+        const PRINT_WIDTH_INCHES = 4;
+        const PRINT_HEIGHT_INCHES = 6;
+        const CANVAS_SIZE = 400; // Pixels for our working canvas
+        
+        // The average head height as a fraction of full body height
+        const AVG_HEAD_RATIO = 1/8;
+        
+        // Event listeners
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        zoomInBtn.addEventListener('click', () => zoom(1.1));
+        zoomOutBtn.addEventListener('click', () => zoom(0.9));
+        resetBtn.addEventListener('click', resetImage);
+        downloadBtn.addEventListener('click', downloadPrintablePhoto);
+        removeBackgroundBtn.addEventListener('click', removeBackground);
+        bgColorPicker.addEventListener('input', changeBgColor);
+        
+        // Mouse events for dragging
+        photoCanvas.addEventListener('mousedown', startDrag);
+        photoCanvas.addEventListener('mousemove', drag);
+        photoCanvas.addEventListener('mouseup', endDrag);
+        photoCanvas.addEventListener('mouseleave', endDrag);
+        
+        // Touch events for mobile
+        photoCanvas.addEventListener('touchstart', handleTouchStart);
+        photoCanvas.addEventListener('touchmove', handleTouchMove);
+        photoCanvas.addEventListener('touchend', endDrag);
+        
+        // Draw guidelines on overlay
+        drawGuidelines();
+        
+        // Handle file selection
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file || !file.type.match('image.*')) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    processedImage = img;
+                    resetImage();
+                    editorContainer.style.display = 'flex';
+                    bgControls.style.display = 'none';
+                    hasTransparentBg = false;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Draw guidelines for passport photo
+        function drawGuidelines() {
+            guideCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Passport photo outline (2x2 inches)
+            guideCtx.strokeStyle = 'rgba(0, 0, 255, 0.8)';
+            guideCtx.lineWidth = 2;
+            guideCtx.strokeRect(
+                CANVAS_SIZE/2 - (CANVAS_SIZE/2), 
+                CANVAS_SIZE/2 - (CANVAS_SIZE/2), 
+                CANVAS_SIZE, 
+                CANVAS_SIZE
+            );
+            
+            // Head height guidelines
+            const centerY = CANVAS_SIZE/2;
+            const pixelsPerMM = CANVAS_SIZE / (PASSPORT_WIDTH_INCHES / MM_TO_INCHES);
+            
+            // Calculate minimum and maximum head heights in pixels
+            const minHeadHeight = HEAD_HEIGHT_MIN_MM * pixelsPerMM;
+            const maxHeadHeight = HEAD_HEIGHT_MAX_MM * pixelsPerMM;
+            
+            // Head position guide (oval)
+            guideCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            guideCtx.lineWidth = 2;
+            
+            // Draw oval for head placement
+            guideCtx.beginPath();
+            guideCtx.ellipse(
+                CANVAS_SIZE/2, 
+                centerY - minHeadHeight/4, 
+                maxHeadHeight/3, 
+                maxHeadHeight/2, 
+                0, 0, 2 * Math.PI
+            );
+            guideCtx.stroke();
+            
+            // Draw min and max head height lines
+            guideCtx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+            guideCtx.setLineDash([5, 5]);
+            
+            // Min head height line
+            guideCtx.beginPath();
+            guideCtx.moveTo(CANVAS_SIZE/4, centerY + minHeadHeight/2);
+            guideCtx.lineTo(3*CANVAS_SIZE/4, centerY + minHeadHeight/2);
+            guideCtx.stroke();
+            
+            // Max head height line
+            guideCtx.beginPath();
+            guideCtx.moveTo(CANVAS_SIZE/4, centerY - maxHeadHeight/2);
+            guideCtx.lineTo(3*CANVAS_SIZE/4, centerY - maxHeadHeight/2);
+            guideCtx.stroke();
+            
+            guideCtx.setLineDash([]);
+            
+            // Label the guidelines
+            guideCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            guideCtx.font = '12px Arial';
+            guideCtx.fillText('Top of head', CANVAS_SIZE/4, centerY - maxHeadHeight/2 - 5);
+            guideCtx.fillText('Bottom of chin', CANVAS_SIZE/4, centerY + minHeadHeight/2 + 15);
+        }
+        
+        // Draw the image on canvas
+        function drawImage() {
+            photoCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            if (!processedImage) return;
+            
+            // If background is transparent, draw background color first
+            if (hasTransparentBg) {
+                photoCtx.fillStyle = bgColor;
+                photoCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            }
+            
+            photoCtx.save();
+            photoCtx.translate(CANVAS_SIZE/2 + offsetX, CANVAS_SIZE/2 + offsetY);
+            photoCtx.scale(scale, scale);
+            photoCtx.drawImage(
+                processedImage, 
+                -photoWidth/2, 
+                -photoHeight/2, 
+                photoWidth, 
+                photoHeight
+            );
+            photoCtx.restore();
+        }
+        
+        // Reset image to default position and scale
+        function resetImage() {
+            if (!processedImage) return;
+            
+            // Calculate initial dimensions while maintaining aspect ratio
+            if (processedImage.width > processedImage.height) {
+                photoWidth = CANVAS_SIZE;
+                photoHeight = (processedImage.height / processedImage.width) * CANVAS_SIZE;
+            } else {
+                photoHeight = CANVAS_SIZE;
+                photoWidth = (processedImage.width / processedImage.height) * CANVAS_SIZE;
+            }
+            
+            // Reset manipulation variables
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            
+            drawImage();
+        }
+        
+        // Zoom in or out
+        function zoom(factor) {
+            scale *= factor;
+            drawImage();
+        }
+        
+        // Start dragging
+        function startDrag(e) {
+            if (!processedImage) return;
+            
+            isDragging = true;
+            startX = e.clientX - photoCanvas.getBoundingClientRect().left;
+            startY = e.clientY - photoCanvas.getBoundingClientRect().top;
+            
+            photoCanvas.style.cursor = 'grabbing';
+        }
+        
+        // Handle touch start for mobile
+        function handleTouchStart(e) {
+            if (!processedImage || e.touches.length !== 1) return;
+            
+            e.preventDefault();
+            isDragging = true;
+            
+            const touch = e.touches[0];
+            startX = touch.clientX - photoCanvas.getBoundingClientRect().left;
+            startY = touch.clientY - photoCanvas.getBoundingClientRect().top;
+            
+            photoCanvas.style.cursor = 'grabbing';
+        }
+        
+        // Drag the image
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const x = e.clientX - photoCanvas.getBoundingClientRect().left;
+            const y = e.clientY - photoCanvas.getBoundingClientRect().top;
+            
+            offsetX += (x - startX);
+            offsetY += (y - startY);
+            
+            startX = x;
+            startY = y;
+            
+            drawImage();
+        }
+        
+        // Handle touch move for mobile
+        function handleTouchMove(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const x = touch.clientX - photoCanvas.getBoundingClientRect().left;
+            const y = touch.clientY - photoCanvas.getBoundingClientRect().top;
+            
+            offsetX += (x - startX);
+            offsetY += (y - startY);
+            
+            startX = x;
+            startY = y;
+            
+            drawImage();
+        }
+        
+        // End dragging
+        function endDrag() {
+            isDragging = false;
+            photoCanvas.style.cursor = 'move';
+        }
+        
+        // Remove background from image
+        function removeBackground() {
+            if (!originalImage) return;
+            
+            // Show loading spinner
+            loadingSpinner.style.display = 'inline-block';
+            removeBackgroundBtn.disabled = true;
+            
+            // Create a temporary canvas for processing
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = originalImage.width;
+            tempCanvas.height = originalImage.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the original image
+            tempCtx.drawImage(originalImage, 0, 0);
+            
+            // Get image data
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+            
+            // Simple background removal using color distance from edges
+            // Collect samples from edges to determine background color
+            const samples = [];
+            const sampleSize = 10;
+            
+            // Top edge
+            for (let x = 0; x < tempCanvas.width; x += sampleSize) {
+                const index = (0 * tempCanvas.width + x) * 4;
+                samples.push({
+                    r: data[index],
+                    g: data[index + 1],
+                    b: data[index + 2]
+                });
+            }
+            
+            // Bottom edge
+            for (let x = 0; x < tempCanvas.width; x += sampleSize) {
+                const index = ((tempCanvas.height - 1) * tempCanvas.width + x) * 4;
+                samples.push({
+                    r: data[index],
+                    g: data[index + 1],
+                    b: data[index + 2]
+                });
+            }
+            
+            // Left edge
+            for (let y = 0; y < tempCanvas.height; y += sampleSize) {
+                const index = (y * tempCanvas.width + 0) * 4;
+                samples.push({
+                    r: data[index],
+                    g: data[index + 1],
+                    b: data[index + 2]
+                });
+            }
+            
+            // Right edge
+            for (let y = 0; y < tempCanvas.height; y += sampleSize) {
+                const index = (y * tempCanvas.width + (tempCanvas.width - 1)) * 4;
+                samples.push({
+                    r: data[index],
+                    g: data[index + 1],
+                    b: data[index + 2]
+                });
+            }
+            
+            // Calculate average background color from samples
+            let avgR = 0, avgG = 0, avgB = 0;
+            samples.forEach(sample => {
+                avgR += sample.r;
+                avgG += sample.g;
+                avgB += sample.b;
+            });
+            
+            avgR = Math.round(avgR / samples.length);
+            avgG = Math.round(avgG / samples.length);
+            avgB = Math.round(avgB / samples.length);
+            
+            // Process the image - remove background
+            const threshold = 30; // Color distance threshold
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Calculate color distance
+                const distance = Math.sqrt(
+                    Math.pow(r - avgR, 2) +
+                    Math.pow(g - avgG, 2) +
+                    Math.pow(b - avgB, 2)
+                );
+                
+                // If color is close to background, make it transparent
+                if (distance < threshold) {
+                    data[i + 3] = 0; // Set alpha to 0 (transparent)
+                }
+            }
+            
+            // Put the processed image data back
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            // Create a new image from the processed canvas
+            const newImg = new Image();
+            newImg.onload = function() {
+                processedImage = newImg;
+                hasTransparentBg = true;
+                bgControls.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+                removeBackgroundBtn.disabled = false;
+                drawImage();
+            };
+            newImg.src = tempCanvas.toDataURL('image/png');
+        }
+        
+        // Change background color
+        function changeBgColor(e) {
+            bgColor = e.target.value;
+            drawImage();
+        }
+        
+        // Download the photo as a 4x6 printable format
+        function downloadPrintablePhoto() {
+            if (!processedImage) return;
+            
+            // Create a new canvas for the 4x6 print
+            const printCanvas = document.createElement('canvas');
+            const dpi = 300; // Print quality
+            printCanvas.width = PRINT_WIDTH_INCHES * dpi;
+            printCanvas.height = PRINT_HEIGHT_INCHES * dpi;
+            const printCtx = printCanvas.getContext('2d');
+            
+            // Fill with white background
+            printCtx.fillStyle = 'white';
+            printCtx.fillRect(0, 0, printCanvas.width, printCanvas.height);
+            
+            // Calculate passport photo size in print (2x2 inches)
+            const passportSize = 2 * dpi;
+            
+            // Number of passport photos we can fit (2 rows, 2 columns)
+            const cols = 2;
+            const rows = 3;
+            
+            // Calculate margins to center the grid
+            const totalWidth = cols * passportSize;
+            const totalHeight = rows * passportSize;
+            const marginX = (printCanvas.width - totalWidth) / (cols + 1);
+            const marginY = (printCanvas.height - totalHeight) / (rows + 1);
+            
+            // Draw passport photos in a grid with proper spacing
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = marginX + col * (passportSize + marginX);
+                    const y = marginY + row * (passportSize + marginY);
+                    
+                    // Fill each passport photo area with background color first if transparent
+                    if (hasTransparentBg) {
+                        printCtx.fillStyle = bgColor;
+                        printCtx.fillRect(x, y, passportSize, passportSize);
+                    }
+                    
+                    // Draw the photo with current position and scale
+                    printCtx.save();
+                    printCtx.translate(x + passportSize/2, y + passportSize/2);
+                    printCtx.scale(scale * passportSize/CANVAS_SIZE, scale * passportSize/CANVAS_SIZE);
+                    printCtx.drawImage(
+                        processedImage, 
+                        -photoWidth/2 + offsetX * (photoWidth/CANVAS_SIZE), 
+                        -photoHeight/2 + offsetY * (photoHeight/CANVAS_SIZE), 
+                        photoWidth, 
+                        photoHeight
+                    );
+                    
+                    // Draw a border around each passport photo
+                    printCtx.restore();
+                    printCtx.strokeStyle = '#ddd';
+                    printCtx.lineWidth = 1;
+                    printCtx.strokeRect(x, y, passportSize, passportSize);
+                }
+            }
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'passport_photos_4x6.png';
+            link.href = printCanvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
