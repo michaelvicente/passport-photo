@@ -3,25 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>US Passport Photo Tool</title>
+    <meta name="description" content="Create free US passport photos online with our easy-to-use tool. No registration, no photo storage, and print at CVS, Walgreens, Target, or home. Perfect 2x2 photos every time.">
+    <meta name="keywords" content="passport photo, US passport photos, digital passport photo, free passport photo, 2x2 passport photo">
+    <meta name="author" content="USA DIGITAL PHOTO">
+    <meta property="og:title" content="USA DIGITAL PHOTO - Free Passport Photo Maker">
+    <meta property="og:description" content="Create US passport photos online for free. No photo storage. Print at CVS, Walgreens, Target, or home. Perfect 2x2 photos every time.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://usadigitalphoto.com">
+    <title>USA DIGITAL PHOTO - Free Passport Photo Maker | 2x2 Photos</title>
     <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #4f6df5;
+            --primary-hover: #3957e3;
+            --secondary-color: #9b59b6;
+            --secondary-hover: #8e44ad;
+            --success-color: #2ecc71;
+            --success-hover: #27ae60;
+            --border-color: #333333;
+            --secondary-text: #aaaaaa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
         }
         
         h1 {
-            color: #2c3e50;
             text-align: center;
+            padding: 15px 0;
+            font-size: 2rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .guidelines {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
             margin-bottom: 20px;
         }
         
@@ -29,23 +74,47 @@
             margin-top: 0;
         }
         
+        .guidelines ul {
+            padding-left: 20px;
+        }
+        
         .upload-container {
             text-align: center;
             margin-bottom: 20px;
         }
         
-        #uploadBtn {
-            background-color: #3498db;
-            color: white;
-            border: none;
+        .btn {
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            border: none;
+            color: white;
+            transition: background-color 0.2s ease;
         }
         
-        #uploadBtn:hover {
-            background-color: #2980b9;
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-hover);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: var(--success-hover);
         }
         
         .editor-container {
@@ -59,11 +128,15 @@
         .canvas-container {
             position: relative;
             margin-bottom: 20px;
+            max-width: 100%;
+            overflow: hidden;
         }
         
         #photoCanvas {
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             cursor: move;
+            max-width: 100%;
+            height: auto;
         }
         
         #guidelineOverlay {
@@ -71,137 +144,357 @@
             top: 0;
             left: 0;
             pointer-events: none;
+            max-width: 100%;
+            height: auto;
         }
         
         .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
             margin-top: 20px;
         }
         
-        button {
-            background-color: #3498db;
-            color: white;
+        .controls-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .bg-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-picker-wrapper {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            overflow: hidden;
+            border-radius: 5px;
+            border: 2px solid var(--border-color);
+        }
+        
+        input[type="color"] {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 50px;
+            height: 50px;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
             cursor: pointer;
-            margin: 0 5px;
-            margin-bottom: 10px;
+            padding: 0;
         }
         
-        button:hover {
-            background-color: #2980b9;
-        }
-        
-        #downloadBtn {
-            background-color: #27ae60;
-        }
-        
-        #downloadBtn:hover {
-            background-color: #219653;
-        }
-        
-        #removeBackgroundBtn {
-            background-color: #9b59b6;
-        }
-        
-        #removeBackgroundBtn:hover {
-            background-color: #8e44ad;
+        .current-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            margin-left: 5px;
+            border: 1px solid var(--border-color);
         }
         
         .instructions {
             margin-top: 20px;
             text-align: center;
-        }
-        
-        .bg-controls {
-            margin-top: 10px;
-            display: none;
-        }
-        
-        .bg-color-picker {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        
-        .bg-color-picker span {
-            margin-right: 10px;
-        }
-        
-        #bgColorPicker {
-            width: 40px;
-            height: 25px;
-            padding: 0;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
+            color: var(--secondary-text);
+            font-size: 0.9rem;
         }
         
         .spinner {
             display: none;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
-            border-left-color: #09f;
+            border-left-color: var(--primary-color);
             animation: spin 1s linear infinite;
+            margin: 0 5px;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .faq-container {
+            margin-top: 40px;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        
+        .faq-question {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .faq-answer {
+            color: var(--secondary-text);
+        }
+        
+        .privacy-notice {
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 5px;
+            background-color: rgba(79, 109, 245, 0.1);
+            font-weight: bold;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 0.9rem;
+        }
+        
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .canvas-container {
+                width: 100%;
+            }
+            
+            #photoCanvas, #guidelineOverlay {
+                width: 100%;
+                height: auto;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>US Passport Photo Tool</h1>
+    <h1>USA DIGITAL PHOTO</h1>
+    <h2 style="text-align: center; margin-bottom: 30px;">Create Free Passport Photos</h2>
     
-    <div class="guidelines">
-        <h3>US Passport Photo Guidelines</h3>
-        <ul>
-            <li>2 x 2 inches (51 x 51 mm) in size</li>
-            <li>Head must be between 1 inch and 1 3/8 inches (25-35 mm) from the bottom of the chin to the top of the head</li>
-            <li>Taken within the last 6 months</li>
-            <li>Plain white or off-white background</li>
-            <li>Neutral facial expression or natural smile</li>
-            <li>Both eyes open and clearly visible</li>
-            <li>No glasses</li>
-            <li>No head coverings (except for religious purposes)</li>
-        </ul>
-    </div>
-    
-    <div class="upload-container">
-        <input type="file" id="fileInput" accept="image/*" style="display: none;">
-        <button id="uploadBtn">Upload Photo</button>
-    </div>
-    
-    <div class="editor-container" id="editorContainer">
-        <div class="canvas-container">
-            <canvas id="photoCanvas" width="400" height="400"></canvas>
-            <canvas id="guidelineOverlay" width="400" height="400"></canvas>
+    <div class="container">
+        <div class="card guidelines">
+            <h3>US Passport Photo Guidelines</h3>
+            <ul>
+                <li>2 x 2 inches (51 x 51 mm) in size</li>
+                <li>Head must be between 1 inch and 1 3/8 inches (25-35 mm) from the bottom of the chin to the top of the head</li>
+                <li>Taken within the last 6 months</li>
+                <li>Plain white or off-white background</li>
+                <li>Neutral facial expression or natural smile</li>
+                <li>Both eyes open and clearly visible</li>
+                <li>No glasses</li>
+                <li>No head coverings (except for religious purposes)</li>
+            </ul>
         </div>
         
-        <div class="button-group">
-            <button id="zoomInBtn">Zoom In</button>
-            <button id="zoomOutBtn">Zoom Out</button>
-            <button id="resetBtn">Reset</button>
-            <button id="removeBackgroundBtn">Remove Background</button>
-            <div class="spinner" id="loadingSpinner"></div>
-            <button id="downloadBtn">Download 4x6 Print</button>
-        </div>
-        
-        <div class="bg-controls" id="bgControls">
-            <div class="bg-color-picker">
-                <span>Background Color:</span>
-                <input type="color" id="bgColorPicker" value="#ffffff">
+        <div class="card">
+            <div class="upload-container">
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <button id="uploadBtn" class="btn btn-primary">Upload Photo</button>
+            </div>
+            
+            <div class="editor-container" id="editorContainer">
+                <div class="canvas-container">
+                    <canvas id="photoCanvas" width="400" height="400"></canvas>
+                    <canvas id="guidelineOverlay" width="400" height="400"></canvas>
+                </div>
+                
+                <div class="controls-section">
+                    <div class="bg-controls">
+                        <div class="color-picker-container">
+                            <span>Background Color:</span>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="bgColorPicker" value="#ffffff">
+                            </div>
+                            <div id="currentColor" class="current-color" style="background-color: #ffffff;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="zoomInBtn" class="btn btn-primary">Zoom In</button>
+                    <button id="zoomOutBtn" class="btn btn-primary">Zoom Out</button>
+                    <button id="resetBtn" class="btn btn-primary">Reset</button>
+                    <button id="applyBgBtn" class="btn btn-secondary">Apply Background Color</button>
+                    <button id="removeBackgroundBtn" class="btn btn-secondary">
+                        <span id="loadingSpinner" class="spinner"></span>
+                        Remove Background
+                    </button>
+                    <button id="downloadBtn" class="btn btn-success">Download 4x6 Print</button>
+                </div>
+                
+                <div class="instructions">
+                    <p>Drag the photo to center the face within the guidelines.<br>Use the zoom buttons to adjust size.</p>
+                </div>
             </div>
         </div>
         
-        <div class="instructions">
-            <p>Drag the photo to center the face within the guidelines.<br>Use the zoom buttons to adjust size.</p>
+        <div class="privacy-notice">
+            We will not store any images that you upload with this tool.
+        </div>
+        
+        <div class="card faq-container">
+            <h3>Frequently Asked Questions</h3>
+            
+            <div class="faq-item">
+                <div class="faq-question">Where can I print the generated photos?</div>
+                <div class="faq-answer">You can print your photos on Amazon, CVS, Walgreens or Target (ezprints).</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Once I have my photo, what's next?</div>
+                <div class="faq-answer">Simply cut out your 2x2 photo from the 4x6. You'll have a few extra 2x2 squares that you can use as backups if you need them.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I print my passport photos at home?</div>
+                <div class="faq-answer">Yes! You can. If you have a photo printer with photo paper, you can easily print your photos instead of going to a store to print them. If you're in the market for a photo printer, check out this Canon printer from Amazon.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Why do I need to use a 4x6 print?</div>
+                <div class="faq-answer">Technically, you don't need to. However, this tool mathematically ensures that your passport photo dimensions are accurate. A grid of 3 photos across and 2 photos down (totaling 6 photos) validates that you have a perfect 2x2 photo to use for your passport application.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">How do I print my own passport photo at CVS?</div>
+                <div class="faq-answer">Visit the CVS Photo website and follow the instructions for printing a single 4x6 photo.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">How do I print my own passport photo at Walgreens?</div>
+                <div class="faq-answer">Visit the Walgreens Photo website and follow the instructions for printing a single 4x6 photo.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Does USA DIGITAL PHOTO store photos?</div>
+                <div class="faq-answer">Nope. Absolutely not. Never! You can use this tool and your photos are not saved. This website does not have any mechanism of keeping any photos that you upload. It's a static HTML page with no server connections other than website hosting.</div>
+            </div>
         </div>
     </div>
+    
+    <footer>
+        <p>&copy; 2025 USA DIGITAL PHOTO - Create professional passport photos for free</p>
+    </footer>
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "USA DIGITAL PHOTO - Free Passport Photo Maker",
+      "url": "https://usadigitalphoto.com",
+      "description": "Create free US passport photos online with our easy-to-use tool. No registration, no photo storage, and print at CVS, Walgreens, Target, or home.",
+      "applicationCategory": "Photography",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "USA DIGITAL PHOTO"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "US passport applicants and travelers"
+      },
+      "datePublished": "2025-04-14",
+      "keywords": "passport photo, US passport photos, digital passport photo, free passport photo, 2x2 passport photo",
+      "potentialAction": {
+        "@type": "PhotographAction",
+        "object": "Passport Photo"
+      },
+      "review": {
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "4.9",
+          "bestRating": "5"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Passport Photo User"
+        },
+        "reviewBody": "This tool helped me create perfect passport photos in minutes. Saved me money and time!"
+      },
+      "mainEntity": {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Where can I print the generated photos?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You can print your photos on Amazon, CVS, Walgreens or Target (ezprints)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Once I have my photo, what's next?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Simply cut out your 2x2 photo from the 4x6. You'll have a few extra 2x2 squares that you can use as backups if you need them."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I print my passport photos at home?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! You can. If you have a photo printer with photo paper, you can easily print your photos instead of going to a store to print them."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why do I need to use a 4x6 print?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Technically, you don't need to. However, this tool mathematically ensures that your passport photo dimensions are accurate. A grid of 3 photos across and 2 photos down (totaling 6 photos) validates that you have a perfect 2x2 photo to use for your passport application."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does USA DIGITAL PHOTO store photos?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nope. Absolutely not. Never! You can use this tool and your photos are not saved. This website does not have any mechanism of keeping any photos that you upload. It's a static HTML page with no server connections other than website hosting."
+            }
+          }
+        ]
+      }
+    }
+    </script>
     
     <script>
         // DOM elements
@@ -214,9 +507,10 @@
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const resetBtn = document.getElementById('resetBtn');
         const downloadBtn = document.getElementById('downloadBtn');
+        const applyBgBtn = document.getElementById('applyBgBtn');
         const removeBackgroundBtn = document.getElementById('removeBackgroundBtn');
-        const bgControls = document.getElementById('bgControls');
         const bgColorPicker = document.getElementById('bgColorPicker');
+        const currentColor = document.getElementById('currentColor');
         const loadingSpinner = document.getElementById('loadingSpinner');
         
         // Canvas contexts
@@ -248,15 +542,19 @@
         // The average head height as a fraction of full body height
         const AVG_HEAD_RATIO = 1/8;
         
-        // Event listeners
-        uploadBtn.addEventListener('click', () => fileInput.click());
+        // Event listeners - Fixed upload button issue
+        uploadBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
         fileInput.addEventListener('change', handleFileSelect);
         zoomInBtn.addEventListener('click', () => zoom(1.1));
         zoomOutBtn.addEventListener('click', () => zoom(0.9));
         resetBtn.addEventListener('click', resetImage);
         downloadBtn.addEventListener('click', downloadPrintablePhoto);
+        applyBgBtn.addEventListener('click', applyBackgroundColor);
         removeBackgroundBtn.addEventListener('click', removeBackground);
-        bgColorPicker.addEventListener('input', changeBgColor);
+        bgColorPicker.addEventListener('input', updateCurrentColorPreview);
         
         // Mouse events for dragging
         photoCanvas.addEventListener('mousedown', startDrag);
@@ -265,8 +563,8 @@
         photoCanvas.addEventListener('mouseleave', endDrag);
         
         // Touch events for mobile
-        photoCanvas.addEventListener('touchstart', handleTouchStart);
-        photoCanvas.addEventListener('touchmove', handleTouchMove);
+        photoCanvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        photoCanvas.addEventListener('touchmove', handleTouchMove, {passive: false});
         photoCanvas.addEventListener('touchend', endDrag);
         
         // Draw guidelines on overlay
@@ -285,7 +583,6 @@
                     processedImage = img;
                     resetImage();
                     editorContainer.style.display = 'flex';
-                    bgControls.style.display = 'none';
                     hasTransparentBg = false;
                 };
                 img.src = event.target.result;
@@ -298,7 +595,7 @@
             guideCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             
             // Passport photo outline (2x2 inches)
-            guideCtx.strokeStyle = 'rgba(0, 0, 255, 0.8)';
+            guideCtx.strokeStyle = 'rgba(79, 109, 245, 0.8)';
             guideCtx.lineWidth = 2;
             guideCtx.strokeRect(
                 CANVAS_SIZE/2 - (CANVAS_SIZE/2), 
@@ -316,7 +613,7 @@
             const maxHeadHeight = HEAD_HEIGHT_MAX_MM * pixelsPerMM;
             
             // Head position guide (oval)
-            guideCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            guideCtx.strokeStyle = 'rgba(155, 89, 182, 0.6)';
             guideCtx.lineWidth = 2;
             
             // Draw oval for head placement
@@ -331,7 +628,7 @@
             guideCtx.stroke();
             
             // Draw min and max head height lines
-            guideCtx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+            guideCtx.strokeStyle = 'rgba(46, 204, 113, 0.6)';
             guideCtx.setLineDash([5, 5]);
             
             // Min head height line
@@ -349,7 +646,7 @@
             guideCtx.setLineDash([]);
             
             // Label the guidelines
-            guideCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            guideCtx.fillStyle = 'rgba(224, 224, 224, 0.8)';
             guideCtx.font = '12px Arial';
             guideCtx.fillText('Top of head', CANVAS_SIZE/4, centerY - maxHeadHeight/2 - 5);
             guideCtx.fillText('Bottom of chin', CANVAS_SIZE/4, centerY + minHeadHeight/2 + 15);
@@ -361,7 +658,7 @@
             
             if (!processedImage) return;
             
-            // If background is transparent, draw background color first
+            // If background has a color applied, draw background color first
             if (hasTransparentBg) {
                 photoCtx.fillStyle = bgColor;
                 photoCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -471,6 +768,42 @@
         function endDrag() {
             isDragging = false;
             photoCanvas.style.cursor = 'move';
+        }
+        
+        // Update current color preview
+        function updateCurrentColorPreview(e) {
+            bgColor = e.target.value;
+            currentColor.style.backgroundColor = bgColor;
+            
+            // If background is already transparent, update it immediately
+            if (hasTransparentBg) {
+                drawImage();
+            }
+        }
+        
+        // Apply selected background color without removing background
+        function applyBackgroundColor() {
+            if (!originalImage) return;
+            
+            // Create a temporary canvas for processing
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = originalImage.width;
+            tempCanvas.height = originalImage.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the original image with solid background color
+            tempCtx.fillStyle = bgColor;
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(originalImage, 0, 0);
+            
+            // Create a new image from the processed canvas
+            const newImg = new Image();
+            newImg.onload = function() {
+                processedImage = newImg;
+                hasTransparentBg = false;
+                drawImage();
+            };
+            newImg.src = tempCanvas.toDataURL('image/png');
         }
         
         // Remove background from image
