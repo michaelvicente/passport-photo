@@ -827,65 +827,22 @@
             const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             const data = imageData.data;
             
-            // Simple background removal using color distance from edges
-            // Collect samples from edges to determine background color
-            const samples = [];
-            const sampleSize = 10;
+            // Simple background removal algorithm
+            // This is a simplified version for demonstration. In a real app, you'd use more sophisticated methods.
             
-            // Top edge
-            for (let x = 0; x < tempCanvas.width; x += sampleSize) {
-                const index = (0 * tempCanvas.width + x) * 4;
-                samples.push({
-                    r: data[index],
-                    g: data[index + 1],
-                    b: data[index + 2]
-                });
-            }
+            // Step 1: Find potential background color (assume corners represent background)
+            const topLeft = getRGBAt(data, 0, 0, tempCanvas.width);
+            const topRight = getRGBAt(data, tempCanvas.width-1, 0, tempCanvas.width);
+            const bottomLeft = getRGBAt(data, 0, tempCanvas.height-1, tempCanvas.width);
+            const bottomRight = getRGBAt(data, tempCanvas.width-1, tempCanvas.height-1, tempCanvas.width);
             
-            // Bottom edge
-            for (let x = 0; x < tempCanvas.width; x += sampleSize) {
-                const index = ((tempCanvas.height - 1) * tempCanvas.width + x) * 4;
-                samples.push({
-                    r: data[index],
-                    g: data[index + 1],
-                    b: data[index + 2]
-                });
-            }
+            // Average the corner colors to determine background
+            const bgR = Math.round((topLeft.r + topRight.r + bottomLeft.r + bottomRight.r) / 4);
+            const bgG = Math.round((topLeft.g + topRight.g + bottomLeft.g + bottomRight.g) / 4);
+            const bgB = Math.round((topLeft.b + topRight.b + bottomLeft.b + bottomRight.b) / 4);
             
-            // Left edge
-            for (let y = 0; y < tempCanvas.height; y += sampleSize) {
-                const index = (y * tempCanvas.width + 0) * 4;
-                samples.push({
-                    r: data[index],
-                    g: data[index + 1],
-                    b: data[index + 2]
-                });
-            }
-            
-            // Right edge
-            for (let y = 0; y < tempCanvas.height; y += sampleSize) {
-                const index = (y * tempCanvas.width + (tempCanvas.width - 1)) * 4;
-                samples.push({
-                    r: data[index],
-                    g: data[index + 1],
-                    b: data[index + 2]
-                });
-            }
-            
-            // Calculate average background color from samples
-            let avgR = 0, avgG = 0, avgB = 0;
-            samples.forEach(sample => {
-                avgR += sample.r;
-                avgG += sample.g;
-                avgB += sample.b;
-            });
-            
-            avgR = Math.round(avgR / samples.length);
-            avgG = Math.round(avgG / samples.length);
-            avgB = Math.round(avgB / samples.length);
-            
-            // Process the image - remove background
-            const threshold = 30; // Color distance threshold
+            // Step 2: Remove background by setting similar colors to transparent
+            const threshold = 35; // Tolerance for color matching
             
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
@@ -894,14 +851,14 @@
                 
                 // Calculate color distance
                 const distance = Math.sqrt(
-                    Math.pow(r - avgR, 2) +
-                    Math.pow(g - avgG, 2) +
-                    Math.pow(b - avgB, 2)
+                    Math.pow(r - bgR, 2) + 
+                    Math.pow(g - bgG, 2) + 
+                    Math.pow(b - bgB, 2)
                 );
                 
                 // If color is close to background, make it transparent
                 if (distance < threshold) {
-                    data[i + 3] = 0; // Set alpha to 0 (transparent)
+                    data[i + 3] = 0; // Alpha channel (transparent)
                 }
             }
             
@@ -912,87 +869,100 @@
             const newImg = new Image();
             newImg.onload = function() {
                 processedImage = newImg;
-                hasTransparentBg = true;
-                bgControls.style.display = 'block';
+                hasTransparentBg = true; // Mark as having transparent background
+                drawImage();
+                
+                // Hide loading spinner
                 loadingSpinner.style.display = 'none';
                 removeBackgroundBtn.disabled = false;
-                drawImage();
             };
             newImg.src = tempCanvas.toDataURL('image/png');
+            
+            // Helper function to get RGB values at specific coordinates
+            function getRGBAt(data, x, y, width) {
+                const index = (y * width + x) * 4;
+                return {
+                    r: data[index],
+                    g: data[index + 1],
+                    b: data[index + 2]
+                };
+            }
         }
         
-        // Change background color
-        function changeBgColor(e) {
-            bgColor = e.target.value;
-            drawImage();
-        }
-        
-        // Download the photo as a 4x6 printable format
+        // Generate and download printable photo sheet
         function downloadPrintablePhoto() {
             if (!processedImage) return;
             
-            // Create a new canvas for the 4x6 print
+            // Create a temporary canvas for the 4x6 print layout
             const printCanvas = document.createElement('canvas');
-            const dpi = 300; // Print quality
-            printCanvas.width = PRINT_WIDTH_INCHES * dpi;
-            printCanvas.height = PRINT_HEIGHT_INCHES * dpi;
+            
+            // Set up dimensions for printing at 300 DPI
+            const printDPI = 300;
+            printCanvas.width = Math.round(PRINT_WIDTH_INCHES * printDPI);
+            printCanvas.height = Math.round(PRINT_HEIGHT_INCHES * printDPI);
+            
             const printCtx = printCanvas.getContext('2d');
             
-            // Fill with white background
-            printCtx.fillStyle = 'white';
+            // Fill background
+            printCtx.fillStyle = bgColor;
             printCtx.fillRect(0, 0, printCanvas.width, printCanvas.height);
             
-            // Calculate passport photo size in print (2x2 inches)
-            const passportSize = 2 * dpi;
+            // Calculate passport photo size at 300 DPI
+            const passportWidthPx = Math.round(PASSPORT_WIDTH_INCHES * printDPI);
+            const passportHeightPx = Math.round(PASSPORT_HEIGHT_INCHES * printDPI);
             
-            // Number of passport photos we can fit (2 rows, 2 columns)
-            const cols = 2;
-            const rows = 3;
-            
-            // Calculate margins to center the grid
-            const totalWidth = cols * passportSize;
-            const totalHeight = rows * passportSize;
-            const marginX = (printCanvas.width - totalWidth) / (cols + 1);
-            const marginY = (printCanvas.height - totalHeight) / (rows + 1);
-            
-            // Draw passport photos in a grid with proper spacing
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const x = marginX + col * (passportSize + marginX);
-                    const y = marginY + row * (passportSize + marginY);
+            // Draw grid of passport photos (3x2)
+            for (let row = 0; row < 2; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const x = col * passportWidthPx;
+                    const y = row * passportHeightPx;
                     
-                    // Fill each passport photo area with background color first if transparent
-                    if (hasTransparentBg) {
-                        printCtx.fillStyle = bgColor;
-                        printCtx.fillRect(x, y, passportSize, passportSize);
-                    }
+                    // Create a temporary canvas for each passport photo
+                    const passportCanvas = document.createElement('canvas');
+                    passportCanvas.width = passportWidthPx;
+                    passportCanvas.height = passportHeightPx;
+                    const passportCtx = passportCanvas.getContext('2d');
                     
-                    // Draw the photo with current position and scale
-                    printCtx.save();
-                    printCtx.translate(x + passportSize/2, y + passportSize/2);
-                    printCtx.scale(scale * passportSize/CANVAS_SIZE, scale * passportSize/CANVAS_SIZE);
-                    printCtx.drawImage(
+                    // Fill background for each passport photo
+                    passportCtx.fillStyle = bgColor;
+                    passportCtx.fillRect(0, 0, passportWidthPx, passportHeightPx);
+                    
+                    // Calculate scaling and positioning to match what's shown in the editor
+                    const scaleFactor = passportWidthPx / CANVAS_SIZE;
+                    
+                    passportCtx.save();
+                    passportCtx.translate(passportWidthPx/2 + offsetX * scaleFactor, passportHeightPx/2 + offsetY * scaleFactor);
+                    passportCtx.scale(scale * scaleFactor, scale * scaleFactor);
+                    
+                    // Draw the image centered
+                    const displayWidth = photoWidth;
+                    const displayHeight = photoHeight;
+                    
+                    passportCtx.drawImage(
                         processedImage, 
-                        -photoWidth/2 + offsetX * (photoWidth/CANVAS_SIZE), 
-                        -photoHeight/2 + offsetY * (photoHeight/CANVAS_SIZE), 
-                        photoWidth, 
-                        photoHeight
+                        -displayWidth/2, 
+                        -displayHeight/2, 
+                        displayWidth, 
+                        displayHeight
                     );
+                    passportCtx.restore();
                     
-                    // Draw a border around each passport photo
-                    printCtx.restore();
-                    printCtx.strokeStyle = '#ddd';
-                    printCtx.lineWidth = 1;
-                    printCtx.strokeRect(x, y, passportSize, passportSize);
+                    // Draw border around each passport photo
+                    passportCtx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    passportCtx.lineWidth = 1;
+                    passportCtx.strokeRect(0, 0, passportWidthPx, passportHeightPx);
+                    
+                    // Add the passport photo to the print sheet
+                    printCtx.drawImage(passportCanvas, x, y);
                 }
             }
             
             // Create download link
             const link = document.createElement('a');
-            link.download = 'passport_photos_4x6.png';
+            link.download = 'passport_photos.png';
             link.href = printCanvas.toDataURL('image/png');
             link.click();
         }
-    </script>
+        </script>
 </body>
 </html>
